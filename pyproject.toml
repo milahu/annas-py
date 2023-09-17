@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "annas-py"
+version = "0.1.0"
+description = "Anna's Archive unofficial client based on web scrapping"
+authors = ["Dheison Gomes <dheisomgomes0@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "annas_py"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31.0"
+beautifulsoup4 = "^4.12.2"
+lxml = "^4.9.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
