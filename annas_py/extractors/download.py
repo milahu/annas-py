@@ -13,7 +13,7 @@ def remove_search_icon(s: str) -> str:
     return s.replace("🔍", "").strip()
 
 
-def get_informations(id: str) -> Download:
+def get_information(id: str) -> Download:
     soup = html_parser(urljoin(BASE_URL, f"md5/{id}"))
 
     title = remove_search_icon(soup.find("div", class_="text-3xl font-bold").text)
