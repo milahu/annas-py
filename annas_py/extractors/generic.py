@@ -1,5 +1,7 @@
 from ..models.data import FileInfo
 
+MAX_SIZE_DESCRIPTION_LENGHT = len("123.4MB")
+
 
 def extract_file_info(raw: str) -> FileInfo:
     # Extract file info from raw string given from the website
@@ -7,8 +9,8 @@ def extract_file_info(raw: str) -> FileInfo:
     # and size, but can have language and file name too
     # > Cases:
     #     Language, format, size and file name is provided;
-    #     Language, format and size is provided, file name is omitted;
-    #     Format and size is provided, language and name is omitted.
+    #     Language, format and size is provided;
+    #     Format and size is provided.
 
     # sample data:
     #  English [en], pdf, 7.5MB, "Python_Web_Scraping_-_Second_Edition.pdf"
@@ -16,12 +18,10 @@ def extract_file_info(raw: str) -> FileInfo:
     #  mobi, 4.1MB
 
     info_list = raw.split(", ")
-    language = None
-    if "[" in info_list[0]:
-        language = info_list.pop(0)
+    language = info_list.pop(0) if " " in info_list[0] else None
     extension = info_list.pop(0)
     size = info_list.pop(0)
-    return FileInfo(language, extension, size)
+    return FileInfo(extension, size, language)
 
 
 def extract_publish_info(raw: str) -> tuple[str | None, str | None]:
@@ -32,18 +32,10 @@ def extract_publish_info(raw: str) -> tuple[str | None, str | None]:
     #  Cambridge University Press, 2014 feb 16
     #  1, 2008
     #  2008
-
-    if raw.strip() == "":
+    raw = raw.strip()
+    if not raw:
         return (None, None)
-    info = [i for i in raw.split(", ") if i.strip()]
-    last_info = info[-1].split()
-    date = None
-    if last_info[0].isdecimal() and last_info[0] != "0":
-        info.pop()
-        date = last_info.pop(0)
-        if last_info:
-            date = " ".join(last_info) + " of " + date
-        elif info and info[-1].isdecimal():
-            date = info.pop() + ", " + date
-    publisher = ", ".join(info) or None
+    info = raw.split(", ")
+    publisher = info[0] if not info[0].isdecimal() else None
+    date = info[-1] if info[-1].split()[0].isdecimal() else None
     return (publisher, date)

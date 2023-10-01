@@ -1,7 +1,7 @@
 from html import unescape as html_unescape
 from urllib.parse import urljoin
 
-from bs4 import Tag
+from bs4 import NavigableString
 
 from ..models.args import FileType, Language, OrderBy
 from ..models.data import SearchResult
@@ -29,23 +29,21 @@ def search(
     return list(filter(lambda i: i is not None, map(parse_result, raw_results)))
 
 
-def parse_result(raw_content: Tag) -> SearchResult | None:
+def parse_result(soup: NavigableString) -> SearchResult | None:
+    def get_text(tag: str, cls: str = "") -> str:
+        attrs = {"class": cls} if cls else {}
+        return soup.find(tag, attrs=attrs).text
+
     try:
-        title = raw_content.find("h3").text.strip()
-    except:
+        title = get_text("h3").strip()
+    except AttributeError:
         return None
-    authors = raw_content.find("div", class_="truncate italic").text
+    authors = get_text("div", "truncate italic")
+    publisher, publish_date = extract_publish_info(get_text("div", "truncate text-sm"))
+    file_info = extract_file_info(get_text("div", "truncate text-xs text-gray-500"))
 
-    publish_info = raw_content.find("div", class_="truncate text-sm").text
-    publisher, publish_date = extract_publish_info(publish_info)
-
-    thumbnail = raw_content.find("img").get("src") or None
-    id = raw_content.get("href").split("md5/")[-1]
-
-    raw_file_info = raw_content.find(
-        "div", class_="truncate text-xs text-gray-500"
-    ).text
-    file_info = extract_file_info(raw_file_info)
+    thumbnail = soup.find("img").get("src") or None
+    id = soup.get("href").split("md5/")[-1]
 
     return SearchResult(
         id=id,
