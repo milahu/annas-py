@@ -1,7 +1,7 @@
 from html import unescape as html_unescape
 from urllib.parse import urljoin
 
-from bs4 import Tag
+from bs4 import NavigableString
 
 from ..models.data import URL, Download
 from ..utils import html_parser
@@ -16,22 +16,27 @@ def remove_search_icon(s: str) -> str:
 def get_information(id: str) -> Download:
     soup = html_parser(urljoin(BASE_URL, f"md5/{id}"))
 
-    title = remove_search_icon(soup.find("div", class_="text-3xl font-bold").text)
-    authors = remove_search_icon(soup.find("div", class_="italic").text)
-    description = soup.find(name="div", class_="js-md5-top-box-description").text
+    def get_text(tag: str, cls: str):
+        return soup.find(tag, class_=cls).text
+
+    title = remove_search_icon(get_text("div", "text-3xl font-bold"))
+    authors = remove_search_icon(get_text("div", "italic"))
+    description = get_text("div", "js-md5-top-box-description")
     thumbnail = soup.find("img").get("src") or None
 
-    publish_info = soup.find("div", class_="text-md").text
-    publisher, publish_date = extract_publish_info(publish_info)
+    publisher, publish_date = extract_publish_info(get_text("div", "text-md"))
 
-    raw_file_info = soup.find("div", class_="text-sm text-gray-500").text
-    file_info = extract_file_info(raw_file_info)
+    file_info = extract_file_info(get_text("div", "text-sm text-gray-500"))
 
-    download_links: list[URL] = []
-    for container in soup.find_all("a", class_="js-download-link"):
-        link = parse_link(container)
-        if link is not None:
-            download_links.append(link)
+    download_links = list(
+        filter(
+            lambda i: i is not None,
+            [
+                parse_link(container)
+                for container in soup.find_all("a", class_="js-download-link")
+            ],
+        )
+    )
 
     return Download(
         title=html_unescape(title),
@@ -45,10 +50,10 @@ def get_information(id: str) -> Download:
     )
 
 
-def parse_link(link: Tag) -> URL | None:
+def parse_link(link: NavigableString) -> URL | None:
     url = link.get("href")
     if url == "/datasets":
         return None
-    if url[0] == "/":
+    elif url[0] == "/":
         url = urljoin(BASE_URL, url[1:])
     return URL(html_unescape(link.text), url)
