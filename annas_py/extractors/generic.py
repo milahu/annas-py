@@ -13,15 +13,15 @@ def extract_file_info(raw: str) -> FileInfo:
     #     Format and size is provided.
 
     # sample data:
-    #  English [en], pdf, 7.5MB, "Python_Web_Scraping_-_Second_Edition.pdf"
-    #  Portuguese [pt], epub, 1.5MB
-    #  mobi, 4.1MB
+    # German [de], .azw3, 🚀/zlib, 1.0MB, 📗 Book (unknown)
 
     info_list = raw.split(", ")
     language = info_list.pop(0) if " " in info_list[0] else None
     extension = info_list.pop(0)
+    library = info_list.pop(0).split("/")[-1]
     size = info_list.pop(0)
-    return FileInfo(extension, size, language)
+    #_type = info_list.pop(0)
+    return FileInfo(extension, size, language, library)
 
 
 def extract_publish_info(raw: str) -> tuple[str | None, str | None]:

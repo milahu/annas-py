@@ -30,17 +30,15 @@ def search(
 
 
 def parse_result(soup: NavigableString) -> SearchResult | None:
-    def get_text(tag: str, cls: str = "") -> str:
-        attrs = {"class": cls} if cls else {}
-        return soup.find(tag, attrs=attrs).text
-
+    def get_text(selector: str = "") -> str:
+        return soup.select_one(selector).text
     try:
         title = get_text("h3").strip()
     except AttributeError:
         return None
-    authors = get_text("div", "truncate italic")
-    publisher, publish_date = extract_publish_info(get_text("div", "truncate text-sm"))
-    file_info = extract_file_info(get_text("div", "truncate text-xs text-gray-500"))
+    authors = get_text("div:nth-child(2) > div:nth-child(4)")
+    publisher, publish_date = extract_publish_info(get_text("div:nth-child(2) > div:nth-child(3)"))
+    file_info = extract_file_info(get_text("div:nth-child(2) > div:nth-child(1)"))
 
     thumbnail = soup.find("img").get("src") or None
     id = soup.get("href").split("md5/")[-1]

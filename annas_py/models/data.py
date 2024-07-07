@@ -12,6 +12,7 @@ class FileInfo:
     extension: str
     size: str
     language: str | None
+    library: str
 
 
 @dataclass(slots=True)
